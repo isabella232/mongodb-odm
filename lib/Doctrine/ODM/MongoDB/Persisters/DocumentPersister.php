@@ -1242,8 +1242,19 @@ class DocumentPersister
             $mapping = $coll->getMapping();
             if ($mapping['strategy'] === "atomicSet" || $mapping['strategy'] === "atomicSetArray") {
                 $collPersister = $this->uow->getCollectionPersister();
-                $update = array_merge_recursive($update, $collPersister->prepareSetQuery($coll));
-                $this->uow->unscheduleCollectionUpdate($coll);
+                if ($this->uow->isCollectionScheduledForUpdate($coll)) {
+                    $update = array_merge_recursive($update, $collPersister->prepareSetQuery($coll));
+                    $this->uow->unscheduleCollectionUpdate($coll);
+                    /*
+                     * Collection can be set for both deletion and update if
+                     * PersistentCollection was changed. Since we're dealing
+                     * only if $set we can ignore scheduled deletion
+                     */
+                    $this->uow->unscheduleCollectionDeletion($coll);
+                } elseif ($this->uow->isCollectionScheduledForDeletion($coll)) {
+                    $update = array_merge_recursive($update, $collPersister->prepareDeleteQuery($coll));
+                    $this->uow->unscheduleCollectionDeletion($coll);
+                }
             }
         }
         return $update;

@@ -2698,6 +2698,23 @@ class UnitOfWork implements PropertyChangedListener
     {
         return in_array($coll, $this->collectionDeletions, true);
     }
+    
+    /**
+     * 
+     * INTERNAL:
+     * Unschedules a collection from being updated deleted when this UnitOfWork commits.
+     * Effectively this is used for atomicSet and atomicSetArray update strategies.
+     * The method doesn't remove $coll from $this->hasScheduledCollections because
+     * it is called only from DocumentPersister resolving that very document
+     * 
+     * @param \Doctrine\ODM\MongoDB\PersistentCollection $coll
+     */
+    public function unscheduleCollectionDeletion(PersistentCollection $coll)
+    {
+        if (($key = array_search($coll, $this->collectionDeletions, true)) !== false) {
+            unset($this->collectionDeletions[$key]);
+        }
+    }
 
     /**
      * INTERNAL:

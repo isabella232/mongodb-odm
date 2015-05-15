@@ -36,6 +36,22 @@ class AtomicSetTest extends \Doctrine\ODM\MongoDB\Tests\BaseTest
         $this->assertEquals('Maciej', $newUser->name);
         $this->assertCount(1, $newUser->phonenumbers);
     }
+    
+    public function testAtomicCollectionUnset()
+    {
+        $user = new AtomicUser('Maciej');
+        $user->phonenumbers[] = new Phonenumber('12345678');
+        $this->dm->persist($user);
+        $this->dm->flush();
+        $user->surname = "Malarz";
+        $user->phonenumbers = null;
+        $this->dm->flush();
+        $this->dm->clear();
+        $newUser = $this->dm->getRepository(get_class($user))->find($user->id);
+        $this->assertEquals('Maciej', $newUser->name);
+        $this->assertEquals('Malarz', $newUser->surname);
+        $this->assertCount(0, $newUser->phonenumbers);
+    }
 }
 
 /**

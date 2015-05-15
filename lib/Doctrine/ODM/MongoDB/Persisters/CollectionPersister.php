@@ -69,6 +69,19 @@ class CollectionPersister
         $this->pb = $pb;
         $this->uow = $uow;
     }
+    
+    /**
+     * INTERNAL:
+     * Preprates $unset query for removing PersistentCollection
+     * 
+     * @param \Doctrine\ODM\MongoDB\PersistentCollection $coll
+     * @return array
+     */
+    public function prepareDeleteQuery(PersistentCollection $coll)
+    {
+        list($propertyPath) = $this->getPathAndParent($coll);
+        return array('$unset' => array($propertyPath => true));
+    }
 
     /**
      * Deletes a PersistentCollection instance completely from a document using $unset.
@@ -82,8 +95,11 @@ class CollectionPersister
         if ($mapping['isInverseSide']) {
             return; // ignore inverse side
         }
-        list($propertyPath, $parent) = $this->getPathAndParent($coll);
-        $query = array('$unset' => array($propertyPath => true));
+        if ($mapping['strategy'] === "atomicSet" || $mapping['strategy'] === "atomicSetArray") {
+            throw new \UnexpectedValueException($mapping['strategy'] . ' delete collection strategy should have been handled by DocumentPersister. Please report a bug in issue tracker');
+        }
+        list(, $parent) = $this->getPathAndParent($coll);
+        $query = $this->prepareDeleteQuery($coll);
         $this->executeQuery($parent, $query, $options);
     }
 
@@ -105,7 +121,7 @@ class CollectionPersister
         switch ($mapping['strategy']) {
             case 'atomicSet':
             case 'atomicSetArray':
-                throw new \UnexpectedValueException($mapping['strategy'] . ' collection strategy should have been handled by DocumentPersister. Please report a bug in issue tracker');
+                throw new \UnexpectedValueException($mapping['strategy'] . ' update collection strategy should have been handled by DocumentPersister. Please report a bug in issue tracker');
             
             case 'set':
             case 'setArray':
