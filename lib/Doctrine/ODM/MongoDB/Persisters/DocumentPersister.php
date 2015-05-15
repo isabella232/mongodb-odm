@@ -73,13 +73,6 @@ class DocumentPersister
     private $uow;
 
     /**
-     * The Hydrator instance
-     *
-     * @var HydratorInterface
-     */
-    private $hydrator;
-
-    /**
      * The ClassMetadata instance for the document type being persisted.
      *
      * @var ClassMetadata
@@ -293,6 +286,17 @@ class DocumentPersister
                     $this->class->reflFields[$this->class->versionField]->setValue($document, $nextVersionDateTime);
                 }
                 $data['$set'][$versionMapping['name']] = $nextVersion;
+            }
+            
+            $collections = $this->uow->getScheduledCollections($document);
+            foreach ($collections as $coll) {
+                /* @var $coll PersistentCollection */
+                $mapping = $coll->getMapping();
+                if ($mapping['strategy'] === "atomicSet" || $mapping['strategy'] === "atomicSetArray") {
+                    $collPersister = $this->uow->getCollectionPersister();
+                    $data = array_merge_recursive($data, $collPersister->prepareSetQuery($coll));
+                    $this->uow->unscheduleCollectionUpdate($coll);
+                }
             }
 
             try {

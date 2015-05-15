@@ -23,6 +23,19 @@ class AtomicSetTest extends \Doctrine\ODM\MongoDB\Tests\BaseTest
         $this->assertEquals('Malarz', $newUser->surname);
         $this->assertCount(2, $newUser->phonenumbers);
     }
+    
+    public function testAtomicUpsert()
+    {
+        $user = new AtomicUser('Maciej');
+        $user->id = new \MongoId();
+        $user->phonenumbers[] = new Phonenumber('12345678');
+        $this->dm->persist($user);
+        $this->dm->flush();
+        $this->dm->clear();
+        $newUser = $this->dm->getRepository(get_class($user))->find($user->id);
+        $this->assertEquals('Maciej', $newUser->name);
+        $this->assertCount(1, $newUser->phonenumbers);
+    }
 }
 
 /**
