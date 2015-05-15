@@ -2712,6 +2712,23 @@ class UnitOfWork implements PropertyChangedListener
     }
     
     /**
+     * 
+     * INTERNAL:
+     * Unschedules a collection from being updated update when this UnitOfWork commits.
+     * Effectively this is used for atomicSet and atomicSetArray update strategies.
+     * The method doesn't remove $coll from $this->hasScheduledCollections because
+     * it is called only from DocumentPersister resolving that very document
+     * 
+     * @param \Doctrine\ODM\MongoDB\PersistentCollection $coll
+     */
+    public function unscheduleCollectionUpdate(PersistentCollection $coll)
+    {
+        if (($key = array_search($coll, $this->collectionUpdates, true)) !== false) {
+            unset($this->collectionUpdates[$key]);
+        }
+    }
+    
+    /**
      * Checks whether a PersistentCollection is scheduled for update.
      *
      * @param PersistentCollection $coll
@@ -2720,6 +2737,21 @@ class UnitOfWork implements PropertyChangedListener
     public function isCollectionScheduledForUpdate(PersistentCollection $coll)
     {
         return in_array($coll, $this->collectionUpdates, true);
+    }
+    
+    /**
+     * INTERNAL:
+     * Gets PersistentCollections that are scheduled to update and related to $document
+     * 
+     * @param object $document
+     * @return array
+     */
+    public function getScheduledCollections($document)
+    {
+        $oid = spl_object_hash($document);
+        return isset($this->hasScheduledCollections[$oid]) 
+                ? $this->hasScheduledCollections[$oid]
+                : array();
     }
     
     /**
@@ -2752,8 +2784,12 @@ class UnitOfWork implements PropertyChangedListener
             list(, $document, ) = $this->getParentAssociation($document);
             $class = $this->dm->getClassMetadata(get_class($document));
         }
+        $oid = spl_object_hash($document);
 
-        $this->hasScheduledCollections[spl_object_hash($document)] = true;
+        if (!isset($this->hasScheduledCollections[$oid])) {
+            $this->hasScheduledCollections[$oid] = array();
+        }
+        $this->hasScheduledCollections[$oid][] = $coll;
 
         if ( ! $this->isDocumentScheduled($document)) {
             $this->scheduleForUpdate($document);

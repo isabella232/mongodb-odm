@@ -103,9 +103,12 @@ class CollectionPersister
         }
 
         switch ($mapping['strategy']) {
+            case 'atomicSet':
+            case 'atomicSetArray':
+                throw new \UnexpectedValueException($mapping['strategy'] . ' collection strategy should have been handled by DocumentPersister. Please report a bug in issue tracker');
+            
             case 'set':
             case 'setArray':
-                $coll->initialize();
                 $this->setCollection($coll, $options);
                 break;
 
@@ -119,6 +122,35 @@ class CollectionPersister
             default:
                 throw new \UnexpectedValueException('Unsupported collection strategy: ' . $mapping['strategy']);
         }
+    }
+    
+    /**
+     * INTERNAL:
+     * Preprates $set query for updating PersistentCollection
+     * 
+     * @param \Doctrine\ODM\MongoDB\PersistentCollection $coll
+     * @return array
+     */
+    public function prepareSetQuery(PersistentCollection $coll)
+    {
+        $coll->initialize();
+        
+        $mapping = $coll->getMapping();
+        list($propertyPath, ) = $this->getPathAndParent($coll);
+
+        $pb = $this->pb;
+
+        $callback = isset($mapping['embedded'])
+            ? function($v) use ($pb, $mapping) { return $pb->prepareEmbeddedDocumentValue($mapping, $v); }
+            : function($v) use ($pb, $mapping) { return $pb->prepareReferencedDocumentValue($mapping, $v); };
+
+        $setData = $coll->map($callback)->toArray();
+
+        if ($mapping['strategy'] === 'setArray') {
+            $setData = array_values($setData);
+        }
+
+        return array('$set' => array($propertyPath => $setData));
     }
 
     /**
@@ -134,23 +166,8 @@ class CollectionPersister
      */
     private function setCollection(PersistentCollection $coll, array $options)
     {
-        $mapping = $coll->getMapping();
-        list($propertyPath, $parent) = $this->getPathAndParent($coll);
-
-        $pb = $this->pb;
-
-        $callback = isset($mapping['embedded'])
-            ? function($v) use ($pb, $mapping) { return $pb->prepareEmbeddedDocumentValue($mapping, $v); }
-            : function($v) use ($pb, $mapping) { return $pb->prepareReferencedDocumentValue($mapping, $v); };
-
-        $setData = $coll->map($callback)->toArray();
-
-        if ($mapping['strategy'] === 'setArray') {
-            $setData = array_values($setData);
-        }
-
-        $query = array('$set' => array($propertyPath => $setData));
-
+        list(, $parent) = $this->getPathAndParent($coll);
+        $query = $this->prepareSetQuery($coll);
         $this->executeQuery($parent, $query, $options);
     }
 

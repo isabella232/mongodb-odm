@@ -235,6 +235,18 @@ class DocumentPersister
                 }
                 $data[$versionMapping['name']] = $nextVersion;
             }
+            
+            $collections = $this->uow->getScheduledCollections($document);
+            foreach ($collections as $coll) {
+                /* @var $coll PersistentCollection */
+                $mapping = $coll->getMapping();
+                if ($mapping['strategy'] === "atomicSet" || $mapping['strategy'] === "atomicSetArray") {
+                    $collPersister = $this->uow->getCollectionPersister();
+                    $update = $collPersister->prepareSetQuery($coll);
+                    $data = array_merge_recursive($data, $update['$set']);
+                    $this->uow->unscheduleCollectionUpdate($coll);
+                }
+            }
 
             $inserts[$oid] = $data;
         }
@@ -373,6 +385,17 @@ class DocumentPersister
                     $update['$set'][$versionMapping['name']] = new \MongoDate($nextVersion->getTimestamp());
                     $query[$versionMapping['name']] = new \MongoDate($currentVersion->getTimestamp());
                     $this->class->reflFields[$this->class->versionField]->setValue($document, $nextVersion);
+                }
+            }
+            
+            $collections = $this->uow->getScheduledCollections($document);
+            foreach ($collections as $coll) {
+                /* @var $coll PersistentCollection */
+                $mapping = $coll->getMapping();
+                if ($mapping['strategy'] === "atomicSet" || $mapping['strategy'] === "atomicSetArray") {
+                    $collPersister = $this->uow->getCollectionPersister();
+                    $update = array_merge_recursive($update, $collPersister->prepareSetQuery($coll));
+                    $this->uow->unscheduleCollectionUpdate($coll);
                 }
             }
 
