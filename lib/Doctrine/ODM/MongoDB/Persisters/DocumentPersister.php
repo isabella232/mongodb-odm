@@ -229,16 +229,9 @@ class DocumentPersister
                 $data[$versionMapping['name']] = $nextVersion;
             }
             
-            $collections = $this->uow->getScheduledCollections($document);
-            foreach ($collections as $coll) {
-                /* @var $coll PersistentCollection */
-                $mapping = $coll->getMapping();
-                if ($mapping['strategy'] === "atomicSet" || $mapping['strategy'] === "atomicSetArray") {
-                    $collPersister = $this->uow->getCollectionPersister();
-                    $update = $collPersister->prepareSetQuery($coll);
-                    $data = array_merge_recursive($data, $update['$set']);
-                    $this->uow->unscheduleCollectionUpdate($coll);
-                }
+            $atomicCollectionQuery = $this->getAtomicCollectionUpdateQuery($document);
+            if (!empty($atomicCollectionQuery['$set'])) {
+                $data = array_merge_recursive($data, $atomicCollectionQuery['$set']);
             }
 
             $inserts[$oid] = $data;
@@ -288,16 +281,7 @@ class DocumentPersister
                 $data['$set'][$versionMapping['name']] = $nextVersion;
             }
             
-            $collections = $this->uow->getScheduledCollections($document);
-            foreach ($collections as $coll) {
-                /* @var $coll PersistentCollection */
-                $mapping = $coll->getMapping();
-                if ($mapping['strategy'] === "atomicSet" || $mapping['strategy'] === "atomicSetArray") {
-                    $collPersister = $this->uow->getCollectionPersister();
-                    $data = array_merge_recursive($data, $collPersister->prepareSetQuery($coll));
-                    $this->uow->unscheduleCollectionUpdate($coll);
-                }
-            }
+            $data = array_merge_recursive($data, $this->getAtomicCollectionUpdateQuery($document));
 
             try {
                 $this->executeUpsert($data, $options);
@@ -392,16 +376,7 @@ class DocumentPersister
                 }
             }
             
-            $collections = $this->uow->getScheduledCollections($document);
-            foreach ($collections as $coll) {
-                /* @var $coll PersistentCollection */
-                $mapping = $coll->getMapping();
-                if ($mapping['strategy'] === "atomicSet" || $mapping['strategy'] === "atomicSetArray") {
-                    $collPersister = $this->uow->getCollectionPersister();
-                    $update = array_merge_recursive($update, $collPersister->prepareSetQuery($coll));
-                    $this->uow->unscheduleCollectionUpdate($coll);
-                }
-            }
+            $update = array_merge_recursive($update, $this->getAtomicCollectionUpdateQuery($document));
 
             /* We got here because the document has one or more related
              * PersistentCollections to be committed later; however, if the
@@ -1256,5 +1231,21 @@ class DocumentPersister
             }
         }
         return $discriminatorValues;
+    }
+    
+    private function getAtomicCollectionUpdateQuery($document)
+    {
+        $update = array();
+        $collections = $this->uow->getScheduledCollections($document);
+        foreach ($collections as $coll) {
+            /* @var $coll PersistentCollection */
+            $mapping = $coll->getMapping();
+            if ($mapping['strategy'] === "atomicSet" || $mapping['strategy'] === "atomicSetArray") {
+                $collPersister = $this->uow->getCollectionPersister();
+                $update = array_merge_recursive($update, $collPersister->prepareSetQuery($coll));
+                $this->uow->unscheduleCollectionUpdate($coll);
+            }
+        }
+        return $update;
     }
 }
