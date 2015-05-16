@@ -72,7 +72,7 @@ class CollectionPersister
     
     /**
      * INTERNAL:
-     * Preprates $unset query for removing PersistentCollection
+     * Prepares $unset query for PersistentCollection removal.
      * 
      * @param \Doctrine\ODM\MongoDB\PersistentCollection $coll
      * @return array
@@ -142,7 +142,12 @@ class CollectionPersister
     
     /**
      * INTERNAL:
-     * Preprates $set query for updating PersistentCollection
+     * Prepares $set query for PersistentCollection update.
+     * 
+     * This method is intended to be used with the "set", "setArray", "atomicSet"
+     * and "atomicSetArray" strategies. The "setArray" and "atomicSetArray" 
+     * strategy will ensure that the collection is set as a BSON array, which 
+     * means the collection elements will be reindexed numerically before storage.
      * 
      * @param \Doctrine\ODM\MongoDB\PersistentCollection $coll
      * @return array

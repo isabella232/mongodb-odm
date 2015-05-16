@@ -2700,7 +2700,6 @@ class UnitOfWork implements PropertyChangedListener
     }
     
     /**
-     * 
      * INTERNAL:
      * Unschedules a collection from being updated deleted when this UnitOfWork commits.
      * Effectively this is used for atomicSet and atomicSetArray update strategies.
@@ -2729,7 +2728,6 @@ class UnitOfWork implements PropertyChangedListener
     }
     
     /**
-     * 
      * INTERNAL:
      * Unschedules a collection from being updated update when this UnitOfWork commits.
      * Effectively this is used for atomicSet and atomicSetArray update strategies.
