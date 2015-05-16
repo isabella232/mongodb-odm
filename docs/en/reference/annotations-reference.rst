@@ -1193,6 +1193,8 @@ Alias of `@Index`_, with the ``unique`` option set by default.
     /** @String @UniqueIndex */
     private $email;
 
+.. _annotations_reference_version:
+
 @Version
 --------
 

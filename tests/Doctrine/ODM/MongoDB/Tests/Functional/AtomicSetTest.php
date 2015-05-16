@@ -6,6 +6,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 use Documents\Phonenumber;
 
+/**
+ * CollectionPersister will throw exception when collection with atomicSet
+ * or atomicSetArray should be handled by it. If no exception was thrown it
+ * means that collection update was handled by DocumentPersister.
+ */
 class AtomicSetTest extends \Doctrine\ODM\MongoDB\Tests\BaseTest
 {
     public function testAtomicInsertAndUpdate()
