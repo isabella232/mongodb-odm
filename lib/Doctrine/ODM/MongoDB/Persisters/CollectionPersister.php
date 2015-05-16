@@ -162,7 +162,7 @@ class CollectionPersister
 
         $setData = $coll->map($callback)->toArray();
 
-        if ($mapping['strategy'] === 'setArray') {
+        if ($mapping['strategy'] === 'setArray' || $mapping['strategy'] === 'atomicSetArray') {
             $setData = array_values($setData);
         }
 
@@ -258,18 +258,6 @@ class CollectionPersister
         $query = array('$' . $mapping['strategy'] => array($propertyPath => $value));
 
         $this->executeQuery($parent, $query, $options);
-    }
-
-    /**
-     * Gets the document database identifier value for the given document.
-     *
-     * @param object $document
-     * @param ClassMetadata $class
-     * @return mixed $id
-     */
-    private function getDocumentId($document, ClassMetadata $class)
-    {
-        return $class->getDatabaseIdentifierValue($this->uow->getDocumentIdentifier($document));
     }
 
     /**
