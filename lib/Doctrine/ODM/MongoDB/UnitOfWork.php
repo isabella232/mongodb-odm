@@ -464,9 +464,9 @@ class UnitOfWork implements PropertyChangedListener
             $this->getCollectionPersister()->delete($collectionToDelete, $options);
         }
 
-        // This hack allows me to fire simulated concurrent PHP logic from my functional test allowing me to demonstrate a concurrency problem.
+        // This hack allows me to fire simulated concurrent PHP logic from a functional test allowing us to prove the atomicset operations work.
         global $concurrentPHPRequestSimulatedLogic;
-        if (get_class($document) == 'Documents\UserVersioned' && is_callable($concurrentPHPRequestSimulatedLogic) && $document->getUsername() == 'apple' && $document->version == 2) {
+        if (get_class($document) == 'Documents\UserVersioned' && is_callable($concurrentPHPRequestSimulatedLogic) && $document->getUsername() == 'ae7e3a92-2983-4cc0-97fb-f074ebd0cabd' && $document->version == 2) {
             $concurrentPHPRequestSimulatedLogic();
         }
 
