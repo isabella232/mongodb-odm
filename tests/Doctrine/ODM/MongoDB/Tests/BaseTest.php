@@ -11,9 +11,11 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
 {
     protected $dm;
     protected $uow;
+    protected $mongoLog = '';
 
     public function setUp()
     {
+        $this->mongoLog = '';
         $this->dm = $this->createTestDocumentManager();
         $this->uow = $this->dm->getUnitOfWork();
     }
@@ -58,6 +60,13 @@ abstract class BaseTest extends \PHPUnit_Framework_TestCase
         $config = $this->getConfiguration();
         $conn = new Connection(DOCTRINE_MONGODB_SERVER, array(), $config);
 
+        $config->setLoggerCallable(array($this, 'queryTriggeredHandler'));
+
         return DocumentManager::create($conn, $config);
+    }
+
+    public function queryTriggeredHandler($event)
+    {
+        $this->mongoLog .= json_encode($event) . "\n";
     }
 }
