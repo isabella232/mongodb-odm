@@ -524,6 +524,9 @@ class PersistentCollection implements BaseCollection
      */
     public function add($value)
     {
+        if (isset($this->mapping['strategy']) && ($this->mapping['strategy'] === 'set' || $this->mapping['strategy'] === 'atomicSet')) {
+            $this->initialize();
+        }
         $this->coll->add($value);
         $this->changed();
         return true;
