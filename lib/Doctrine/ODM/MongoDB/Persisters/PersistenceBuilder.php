@@ -187,7 +187,7 @@ class PersistenceBuilder
             } elseif (isset($mapping['association']) && $mapping['association'] === ClassMetadata::EMBED_MANY) {
                 if (null !== $new) {
                     foreach ($new as $key => $embeddedDoc) {
-                        if ( ! $this->uow->isScheduledForInsert($embeddedDoc)) {
+                        if ( ! $this->uow->isScheduledForInsert($embeddedDoc) && ! $this->isPartOfAtomicUpdate($embeddedDoc)) {
                             $update = $this->prepareUpdateData($embeddedDoc);
                             foreach ($update as $cmd => $values) {
                                 foreach ($values as $name => $value) {
@@ -484,5 +484,14 @@ class PersistenceBuilder
     {
         return $this->uow->isScheduledForInsert($document)
             || $this->uow->getDocumentPersister(get_class($document))->isQueuedForInsert($document);
+    }
+
+    private function isPartOfAtomicUpdate($embeddeDoc)
+    {
+        while (null !== ($parentAssoc = $this->uow->getParentAssociation($embeddeDoc))) {
+            list($mapping, $embeddeDoc, ) = $parentAssoc;
+        }
+        return isset($mapping['association']) && $mapping['association'] === ClassMetadata::EMBED_MANY
+                && ($mapping['strategy'] === 'atomicSet' || $mapping['strategy'] === 'atomicSetArray');
     }
 }
