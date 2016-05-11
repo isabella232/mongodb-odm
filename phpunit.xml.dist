@@ -29,7 +29,8 @@
     </groups>
 
     <php>
-        <const name="DOCTRINE_MONGODB_SERVER" value="mongodb://localhost:27017" />
+        <const name="DOCTRINE_MONGODB_SERVER" value="local-development-iad-onebox.lyft.net:27017" />
         <const name="DOCTRINE_MONGODB_DATABASE" value="doctrine_odm_tests" />
+        <ini name="memory_limit" value="150M"/>
     </php>
 </phpunit>
