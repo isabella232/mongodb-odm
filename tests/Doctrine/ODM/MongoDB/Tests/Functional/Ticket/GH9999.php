@@ -14,49 +14,31 @@ class G9999Test extends \Doctrine\ODM\MongoDB\Tests\BaseTest
 
         return $book;
     }
-
-    public function createBookWithTitle($title, $id)
-    {
-        $book = (new GH9999Book())
-            ->setTitle($title)
-            ->setId($id);
-
-        return $book;
-    }
-
-    public function createBookWithAuthor($author, $id)
-    {
-        $book = (new GH9999Book())
-            ->setAuthor($author)
-            ->setId($id);
-
-        return $book;
-    }
     public function test_testy()
     {
-        $this->dm->persist($this->createBookWithTitle("title",'book1'));
+        $this->dm->persist($this->createBook("title", "author", 'book1'));
         $this->dm->flush();
-        $this->dm->persist($this->createBookWithAuthor('author', 'book2'));
+        $this->dm->persist($this->createBook("title2", "author2", 'book2'));
         $this->dm->flush();
-        $this->dm->persist($this->createBookWithTitle("title2",'book1'));
+        $this->dm->persist($this->createBook("title_updated", 'author_updated', 'book1'));
         $this->dm->flush();
-        $this->dm->persist($this->createBookWithAuthor('author2', 'book2'));
+        $this->dm->persist($this->createBook("title2_updated", 'author2_updated', 'book2'));
         $this->dm->flush();
+
         $book = $this->dm->getRepository(GH9999Book::CLASSNAME)->findOneBy(array('_id' => 'book1'));
-        $this->assertNotNull($book);
-        var_dump($book);
-        $this->assertTrue($book->getTitle() == 'title2');
-        $this->assertNull($book->getAuthor());
+        $this->assertTrue($book->getTitle() == 'title_updated');
         $book = $this->dm->getRepository(GH9999Book::CLASSNAME)->findOneBy(array('_id' => 'book2'));
-        $this->assertNotNull($book);
-        var_dump($book);
-        $this->assertTrue($book->getAuthor() == 'author2');
-        $this->assertNull($book->getTitle());
+        $this->assertTrue($book->getTitle() == 'title2_updated');
+
+
     }
 }
-/** @ODM\Document */
+/**
+ * @ODM\Document
+ */
 class GH9999Book
 {
+
     const CLASSNAME = __CLASS__;
 
     /** @ODM\Id(strategy="none", type="string") */
