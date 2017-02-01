@@ -254,6 +254,17 @@ class DocumentManager implements ObjectManager
     }
 
     /**
+     * Allow overriding of the UnitOfWork
+     *
+     * @param UnitOfWork $uow
+     */
+    public function setUnitOfWork(UnitOfWork $uow)
+    {
+        $this->unitOfWork = $uow;
+        $this->hydratorFactory->setUnitOfWork($this->unitOfWork);
+    }
+
+    /**
      * Gets the Hydrator factory used by the DocumentManager to generate and get hydrators
      * for each type of document.
      *
