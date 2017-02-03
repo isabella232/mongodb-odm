@@ -262,6 +262,7 @@ class DocumentManager implements ObjectManager
     {
         $this->unitOfWork = $uow;
         $this->hydratorFactory->setUnitOfWork($this->unitOfWork);
+        $this->proxyFactory->setUnitOfWork($this->unitOfWork);
     }
 
     /**
