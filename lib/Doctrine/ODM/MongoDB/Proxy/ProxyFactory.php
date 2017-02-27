@@ -84,9 +84,9 @@ class ProxyFactory extends AbstractProxyFactory
     }
 
     /**
-     * @param UnitOfWWork $uow
+     * @param UnitOfWork $uow
      */
-    public function setUnitOfWork(UnitOfWWork $uow)
+    public function setUnitOfWork(UnitOfWork $uow)
     {
         $this->uow = $uow;
     }
