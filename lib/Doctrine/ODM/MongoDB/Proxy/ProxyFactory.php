@@ -24,6 +24,7 @@ use Doctrine\Common\Proxy\AbstractProxyFactory;
 use Doctrine\Common\Proxy\ProxyDefinition;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Doctrine\ODM\MongoDB\DocumentNotFoundException;
+use Doctrine\ODM\MongoDB\UnitOfWork;
 use Doctrine\Common\Proxy\ProxyGenerator;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\Common\Proxy\Proxy as BaseProxy;
@@ -80,6 +81,14 @@ class ProxyFactory extends AbstractProxyFactory
         $proxyGenerator->setPlaceholder('baseProxyInterface', Proxy::class);
 
         parent::__construct($proxyGenerator, $this->metadataFactory, $autoGenerate);
+    }
+
+    /**
+     * @param UnitOfWork $uow
+     */
+    public function setUnitOfWork(UnitOfWork $uow)
+    {
+        $this->uow = $uow;
     }
 
     /**
